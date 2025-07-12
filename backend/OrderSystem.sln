@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35312.102
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderGenerator", "OrderGenerator\OrderGenerator.csproj", "{01B8B7F0-F35F-496C-9C73-BFAED648EB7C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderAccumulator", "OrderAccumulator\OrderAccumulator.csproj", "{6EF0F2DE-A61C-4FB7-AAD7-2EC01BE104B6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{01B8B7F0-F35F-496C-9C73-BFAED648EB7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01B8B7F0-F35F-496C-9C73-BFAED648EB7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01B8B7F0-F35F-496C-9C73-BFAED648EB7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01B8B7F0-F35F-496C-9C73-BFAED648EB7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EF0F2DE-A61C-4FB7-AAD7-2EC01BE104B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EF0F2DE-A61C-4FB7-AAD7-2EC01BE104B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EF0F2DE-A61C-4FB7-AAD7-2EC01BE104B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EF0F2DE-A61C-4FB7-AAD7-2EC01BE104B6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {26EFFE0C-8F17-44BD-94B2-51C5A01E4A8B}
+	EndGlobalSection
+EndGlobal
