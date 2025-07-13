@@ -20,7 +20,8 @@ namespace OrderGenerator.Controllers
         [HttpPost]
         public async Task<IActionResult> PostOrder(OrderDto order)
         {
-            return Ok(await fixClient.NewOrder(order));
+            var result = await fixClient.NewOrder(order);
+            return Ok(result);
         }
 
     }

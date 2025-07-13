@@ -5,30 +5,26 @@ using QuickFix.Fields;
 using QuickFix.FIX44;
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OrderGenerator.Clients
 {
     public class QuickFixClient : MessageCracker, IQuickFixClient, IApplication
     {
-        private readonly SessionID sessionID;
+        private SessionID sessionID;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<OrderResultDto>> pendingOrders = new();
-
-        public QuickFixClient(SessionID sessionID)
-        {
-            this.sessionID = sessionID;
-        }
-
-        // Recebe ExecutionReport do OrderAccumulator
         public void OnMessage(ExecutionReport report, SessionID sessionID)
         {
             var orderId = report.ClOrdID.getValue();
             var execType = report.ExecType.getValue();
 
+            Console.WriteLine($"[OnMessage] Instance HashCode: {this.GetHashCode()}");
+
             var orderResult = new OrderResultDto().Create(execType != ExecType.REJECTED, orderId);
 
             if (pendingOrders.TryRemove(orderId, out var tcs)) tcs.SetResult(orderResult);
-            else Console.WriteLine($"No pending order found for ClOrdID={orderId}");
+            else Console.WriteLine($"Sem pendências para a order {orderId}.");
         }
 
         public async Task<OrderResultDto> NewOrder(OrderDto newOrder)
@@ -56,13 +52,34 @@ namespace OrderGenerator.Clients
                 throw new Exception("Erro ao enviar ordem FIX. Revise os valores e a sessão.");
             }
 
-            var completed = await Task.WhenAny(tcs.Task, Task.Delay(5000));
-            if (completed == tcs.Task)
-                return await tcs.Task;
-            else
+            Console.WriteLine($"[NewOrder] Instance HashCode: {this.GetHashCode()}");
+
+            var delay = Task.Delay(10000);
+            var completed = await Task.WhenAny(tcs.Task, delay);
+
+            Console.WriteLine($"TCS Task Id: {tcs.Task.Id}");
+            Console.WriteLine($"Completed Task Id: {completed.Id}");
+            Console.WriteLine("Completed == tcs.Task? " + (completed == tcs.Task));
+            Console.WriteLine("Completed.Equals(tcs.Task)? " + completed.Equals(tcs.Task));
+
+            if (!Session.SendToTarget(order, sessionID))
             {
                 pendingOrders.TryRemove(orderId, out _);
-                throw new TimeoutException("Sem resposta do servidor.");
+                throw new Exception("Erro ao enviar ordem FIX. Revise os valores e a sessão.");
+            }
+
+            using var cts = new CancellationTokenSource(10000);
+            using (cts.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false))
+            {
+                try
+                {
+                    return await tcs.Task;
+                }
+                catch (TaskCanceledException)
+                {
+                    pendingOrders.TryRemove(orderId, out _);
+                    throw new TimeoutException("Sem resposta do servidor.");
+                }
             }
         }
 
@@ -71,15 +88,14 @@ namespace OrderGenerator.Clients
         public void FromApp(QuickFix.Message message, SessionID sessionID)
         {
             Console.WriteLine($"Message received in FromApp:\n{message}");
-            try
-            {
-                if (message.Header.GetString(Tags.MsgType) == MsgType.EXECUTIONREPORT)
+            Console.WriteLine("Tipo da mensagem: " + message.GetType().Name);
+            Console.WriteLine("MsgType: " + message.Header.GetString(Tags.MsgType));
 
-                    Crack(message, sessionID);
-            }
-            catch (Exception ex)
+            if (message.Header.GetString(Tags.MsgType) == MsgType.EXECUTION_REPORT)
             {
-                Console.WriteLine($"Error cracking message: {ex}");
+                var execReport = new ExecutionReport();
+                execReport.FromString(message.ToString(), true, null, null);
+                OnMessage(execReport, sessionID);
             }
         }
 
@@ -89,6 +105,7 @@ namespace OrderGenerator.Clients
 
         public void OnLogon(SessionID sessionID)
         {
+            this.sessionID = sessionID;
             Console.WriteLine($"Logon - Session: {sessionID}");
         }
 

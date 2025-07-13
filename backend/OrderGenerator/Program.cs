@@ -1,42 +1,48 @@
+using Microsoft.AspNetCore.Builder;
 using OrderGenerator.Clients.Interfaces;
 using OrderGenerator.Clients;
-using QuickFix;
 using QuickFix.Logger;
 using QuickFix.Store;
 using QuickFix.Transport;
-using OrderAccumulator.Services;
-using Microsoft.AspNetCore.Builder;
+using QuickFix;
 using Microsoft.Extensions.DependencyInjection;
-using System.Linq;
 using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuração do FIX
+// FIX settings
 var settings = new SessionSettings(@"FIX/generator.cfg");
 builder.Services.AddSingleton(settings);
 
-var application = new QuickFixOrderService(); 
-var storeFactory = new FileStoreFactory(settings);
-var logFactory = new FileLogFactory(settings);
-var initiator = new SocketInitiator(application, storeFactory, settings, logFactory);
+// Instância única do QuickFixClient
+var quickFixClient = new QuickFixClient();
+builder.Services.AddSingleton(quickFixClient); // usado pelo initiator
+builder.Services.AddSingleton<IQuickFixClient>(sp => sp.GetRequiredService<QuickFixClient>());
+builder.Services.AddSingleton<IApplication>(sp => sp.GetRequiredService<QuickFixClient>());
 
-builder.Services.AddSingleton(initiator);
-builder.Services.AddSingleton<IApplication>(application);
+// Store e log
+builder.Services.AddSingleton<IMessageStoreFactory>(sp => new FileStoreFactory(settings));
+builder.Services.AddSingleton<ILogFactory>(sp => new FileLogFactory(settings));
 
-var sessionID = settings.GetSessions().First();
-builder.Services.AddSingleton(sessionID);
+// Iniciador do FIX
+builder.Services.AddSingleton<SocketInitiator>(sp =>
+    new SocketInitiator(
+        sp.GetRequiredService<IApplication>(),
+        sp.GetRequiredService<IMessageStoreFactory>(),
+        settings,
+        sp.GetRequiredService<ILogFactory>()
+    )
+);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<IQuickFixClient, QuickFixClient>();
-
 var app = builder.Build();
 
-var fixInitiator = app.Services.GetRequiredService<SocketInitiator>();
-fixInitiator.Start();
+// Start FIX
+var initiator = app.Services.GetRequiredService<SocketInitiator>();
+initiator.Start();
 
 if (app.Environment.IsDevelopment())
 {
@@ -47,5 +53,4 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
-
 app.Run();

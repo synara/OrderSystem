@@ -50,7 +50,7 @@ namespace OrderAccumulator.Services
                 if (rejected) Console.WriteLine($"Ordem rejeitada. Exposição excedida para símbolo {symbol}.");
                 else
                 {
-                    Console.WriteLine($"Ordem aceita para símbolo {symbol}.");
+                    Console.WriteLine($"Ordem {orderId} aceita para símbolo {symbol}. ");
                     exposureBySymbol[symbol] = newExposure;
                 }
 
