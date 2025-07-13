@@ -3,6 +3,7 @@ using OrderGenerator.DTO;
 using QuickFix;
 using QuickFix.Fields;
 using QuickFix.FIX44;
+using System.Drawing;
 
 
 namespace OrderGenerator.Clients
@@ -18,17 +19,41 @@ namespace OrderGenerator.Clients
 
         public bool NewOrder(OrderDto newOrder)
         {
-            var order = new NewOrderSingle(
-            new ClOrdID(Guid.NewGuid().ToString()),
-            new Symbol(newOrder.Symbol),
-            newOrder.Side.ToUpper() == "venda" ? new Side(Side.SELL) : new Side(Side.BUY),
-            new TransactTime(DateTime.UtcNow),
-            new OrdType(OrdType.LIMIT));
+            var execType = new ExecType(
+               Math.Abs(5) > 6
+                   ? ExecType.REJECTED
+                   : ExecType.NEW
+           );
+
+            var execReport = new ExecutionReport(
+                new OrderID(Guid.NewGuid().ToString()),
+                new ExecID(Guid.NewGuid().ToString()),
+                execType,
+                new OrdStatus(OrdStatus.NEW),
+            new Symbol("VALE3"),
+                new Side(Side.SELL),
+                new LeavesQty(3),
+                new CumQty(0),
+                new AvgPx(3)
+            );
+
+            var sessionID = new SessionID("FIX.4.4", "GENERATOR", "ACCUMULATOR");
+
+            NewOrderSingle order = new NewOrderSingle
+                (
+                    new ClOrdID(Guid.NewGuid().ToString()),
+                    new Symbol(newOrder.Symbol),
+                    new Side(newOrder.Side.ToUpper().Equals("COMPRA") ? Side.BUY : Side.SELL),
+                    new TransactTime(DateTime.Now),
+                    new OrdType(OrdType.LIMIT)
+                );
 
             order.Set(new OrderQty(newOrder.Quantity));
             order.Set(new Price(newOrder.Price));
 
-            return Session.SendToTarget(order, sessionID);
+            Session.SendToTarget(order, sessionID);
+
+            return false;
         }
     }
 }

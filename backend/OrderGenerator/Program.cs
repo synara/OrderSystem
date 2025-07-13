@@ -1,30 +1,39 @@
 using OrderGenerator.Clients.Interfaces;
 using OrderGenerator.Clients;
 using QuickFix;
+using QuickFix.Logger;
+using QuickFix.Store;
+using QuickFix.Transport;
+using OrderAccumulator.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-var settings = new SessionSettings("generator.cfg");
+// Configuração do FIX
+var settings = new SessionSettings(@"FIX/generator.cfg");
 builder.Services.AddSingleton(settings);
 
-var sessionID = settings.GetSessions().First(); 
+var application = new QuickFixOrderService(); 
+var storeFactory = new FileStoreFactory(settings);
+var logFactory = new FileLogFactory(settings);
+var initiator = new SocketInitiator(application, storeFactory, settings, logFactory);
+
+builder.Services.AddSingleton(initiator);
+builder.Services.AddSingleton<IApplication>(application);
+
+var sessionID = settings.GetSessions().First();
 builder.Services.AddSingleton(sessionID);
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
-
 builder.Services.AddSingleton<IQuickFixClient, QuickFixClient>();
-
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+var fixInitiator = app.Services.GetRequiredService<SocketInitiator>();
+fixInitiator.Start();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -32,9 +41,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
