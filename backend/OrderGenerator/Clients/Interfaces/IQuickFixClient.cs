@@ -1,9 +1,10 @@
 ﻿using OrderGenerator.DTO;
+using System.Threading.Tasks;
 
 namespace OrderGenerator.Clients.Interfaces
 {
     public interface IQuickFixClient
     {
-        bool NewOrder(OrderDto order);
+        Task<OrderResultDto> NewOrder(OrderDto order);
     }
 }

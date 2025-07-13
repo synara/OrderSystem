@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using OrderGenerator.Clients.Interfaces;
 using OrderGenerator.DTO;
+using System.Threading.Tasks;
 
 namespace OrderGenerator.Controllers
 {
@@ -17,9 +18,9 @@ namespace OrderGenerator.Controllers
         }
 
         [HttpPost]
-        public IActionResult PostOrder(OrderDto order)
+        public async Task<IActionResult> PostOrder(OrderDto order)
         {
-            return Ok(fixClient.NewOrder(order));
+            return Ok(await fixClient.NewOrder(order));
         }
 
     }

@@ -1,88 +1,89 @@
 ﻿using QuickFix;
 using QuickFix.Fields;
 using QuickFix.FIX44;
+using QuickFix.Logger;
 using QuickFix.Store;
 using QuickFix.Transport;
-using QuickFix.Logger;
 using System;
 using System.Threading;
 
 class Program
 {
-    private static ThreadedSocketAcceptor? _acceptor;
-    private static ManualResetEventSlim _shutdownEvent = new(false);
-
     static void Main()
     {
-        var settings = new SessionSettings("accumulatorteste.cfg");
-        var app = new SimpleFixApp();
+        var settings = new SessionSettings("accumulator.cfg");
+        var app = new ExecutionReportTester();
         var storeFactory = new FileStoreFactory(settings);
         var logFactory = new ScreenLogFactory(settings);
-
-        _acceptor = new ThreadedSocketAcceptor(app, storeFactory, settings, logFactory);
+        var acceptor = new ThreadedSocketAcceptor(app, storeFactory, settings, logFactory);
 
         Console.CancelKeyPress += (s, e) =>
         {
-            Console.WriteLine("Stopping FIX server...");
-            _acceptor.Stop();
-            _shutdownEvent.Set();
+            Console.WriteLine("Shutting down...");
+            acceptor.Stop();
             e.Cancel = true;
         };
 
-        Console.WriteLine("Starting FIX server...");
-        _acceptor.Start();
+        acceptor.Start();
+        Console.WriteLine("FIX Acceptor started. Waiting for connections... Press Ctrl+C to exit.");
 
-        Console.WriteLine("FIX server started. Press Ctrl+C to stop.");
-        _shutdownEvent.Wait();
-        Console.WriteLine("FIX server stopped.");
+        Thread.Sleep(Timeout.Infinite);
     }
 }
 
-class SimpleFixApp : MessageCracker, IApplication
+class ExecutionReportTester : MessageCracker, IApplication
 {
-    public void FromAdmin(QuickFix.Message message, SessionID sessionID) => Console.WriteLine($"FromAdmin: {message}");
+    public void FromAdmin(QuickFix.Message message, SessionID sessionID) => Console.WriteLine($"[FromAdmin] {message}");
+    public void ToAdmin(QuickFix.Message message, SessionID sessionID) => Console.WriteLine($"[ToAdmin] {message}");
+    public void OnCreate(SessionID sessionID) => Console.WriteLine($"[Session Created] {sessionID}");
+    public void OnLogon(SessionID sessionID) => Console.WriteLine($"[Logon] {sessionID}");
+    public void OnLogout(SessionID sessionID) => Console.WriteLine($"[Logout] {sessionID}");
+
+    public void ToApp(QuickFix.Message message, SessionID sessionID)
+    {
+        Console.WriteLine($"[ToApp] {message}");
+    }
 
     public void FromApp(QuickFix.Message message, SessionID sessionID)
     {
-        Console.WriteLine($"FromApp: {message}");
+        Console.WriteLine($"[FromApp] {message}");
         try
         {
             Crack(message, sessionID);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Exception in Crack: {ex}");
+            Console.WriteLine($"[Crack ERROR] {ex}");
         }
     }
 
-    public void OnCreate(SessionID sessionID) => Console.WriteLine($"Session created: {sessionID}");
-
-    public void OnLogon(SessionID sessionID) => Console.WriteLine($"Logon: {sessionID}");
-
-    public void OnLogout(SessionID sessionID) => Console.WriteLine($"Logout: {sessionID}");
-
-    public void ToAdmin(QuickFix.Message message, SessionID sessionID) => Console.WriteLine($"ToAdmin: {message}");
-
-    public void ToApp(QuickFix.Message message, SessionID sessionID) => Console.WriteLine($"ToApp: {message}");
-
     public void OnMessage(NewOrderSingle order, SessionID sessionID)
     {
-        Console.WriteLine($"Received NewOrderSingle: ClOrdID={order.ClOrdID}, Symbol={order.Symbol}, Side={order.Side}, Qty={order.OrderQty}, Price={order.Price}");
+        Console.WriteLine($"[Received Order] {order}");
 
-        var execReport = new ExecutionReport(
-            new OrderID(Guid.NewGuid().ToString()),
-            new ExecID(Guid.NewGuid().ToString()),
-            new ExecType(ExecType.NEW),
-            new OrdStatus(OrdStatus.NEW),
-            order.Symbol,
-            order.Side,
-            new LeavesQty(order.OrderQty.Value),
-            new CumQty(0),
-            new AvgPx(order.Price.Value)
-        );
+        try
+        {
+            var execReport = new ExecutionReport(
+                new OrderID(Guid.NewGuid().ToString()),
+                new ExecID(Guid.NewGuid().ToString()),
+                new ExecType(ExecType.NEW),
+                new OrdStatus(OrdStatus.NEW),
+                new Symbol("PETR4"),
+                new Side(Side.BUY),
+                new LeavesQty(100),
+                new CumQty(0),
+                new AvgPx(50.55m)
+            );
 
-        // Normalmente você enviaria a mensagem, mas aqui só logamos para teste
-        Console.WriteLine("ExecutionReport criado com sucesso:");
-        Console.WriteLine(execReport);
+            execReport.Set(new ClOrdID(order.ClOrdID.Obj));
+            Console.WriteLine("[ExecutionReport created successfully]");
+            Console.WriteLine(execReport.ToString());
+
+            Session.SendToTarget(execReport, sessionID);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ExecutionReport ERROR] {ex}");
+        }
     }
 }

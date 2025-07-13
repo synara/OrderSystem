@@ -5,6 +5,10 @@ using QuickFix.Logger;
 using QuickFix.Store;
 using QuickFix.Transport;
 using OrderAccumulator.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using System.Linq;
+using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
