@@ -4,6 +4,7 @@
     {
         public string OrderId { get; set; }
         public string Message { get; set; }
+        public bool Success { get; set; }
 
         public OrderResultDto Create(bool accepted, string orderId)
         {

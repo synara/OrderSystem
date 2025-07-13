@@ -9,7 +9,7 @@ namespace OrderAccumulator.Services
     public class QuickFixOrderService : MessageCracker, IApplication
     {
         private readonly ConcurrentDictionary<string, decimal> exposureBySymbol = new();
-        private const decimal EXPOSURE_LIMIT = 100000000m;
+        private const decimal EXPOSURE_LIMIT = 100_000_000m;
 
         public void OnMessage(NewOrderSingle order, SessionID sessionID)
         {
@@ -24,11 +24,9 @@ namespace OrderAccumulator.Services
             decimal currentExposure = exposureBySymbol.GetOrAdd(symbol, 0);
             decimal newExposure = currentExposure + impact;
 
-            var execType = new ExecType(
-                Math.Abs(newExposure) > EXPOSURE_LIMIT
-                    ? ExecType.REJECTED
-                    : ExecType.NEW
-            );
+            var rejected = Math.Abs(newExposure) > EXPOSURE_LIMIT;
+
+            var execType = new ExecType(rejected ? ExecType.REJECTED : ExecType.NEW);
 
             var ordStatus = execType.getValue().Equals(ExecType.REJECTED) ? OrdStatus.REJECTED : OrdStatus.NEW;
 
@@ -44,13 +42,18 @@ namespace OrderAccumulator.Services
                 new AvgPx(price));
 
             execReport.Set(new ClOrdID(orderId));
-
-            if (execType.getValue().Equals(ExecType.NEW))
-                exposureBySymbol[symbol] = newExposure;
-
+             
             try
             {
                 Session.SendToTarget(execReport, sessionID);
+
+                if (rejected) Console.WriteLine($"Ordem rejeitada. Exposição excedida para símbolo {symbol}.");
+                else
+                {
+                    Console.WriteLine($"Ordem aceita para símbolo {symbol}.");
+                    exposureBySymbol[symbol] = newExposure;
+                }
+
             }
             catch (Exception ex)
             {
@@ -68,9 +71,11 @@ namespace OrderAccumulator.Services
         public void FromApp(QuickFix.Message message, SessionID sessionId)
         {
             Console.WriteLine($"Message received:\n{message}");
+
             try
             {
-                Crack(message, sessionId);
+                if(message.Header.GetString(Tags.MsgType) == MsgType.ORDER_SINGLE)
+                    Crack(message, sessionId);
             }
             catch (Exception ex)
             {
@@ -78,11 +83,11 @@ namespace OrderAccumulator.Services
             }
         }
 
-        public void OnCreate(SessionID sessionId) { }
+        public void OnCreate(SessionID sessionId) => Console.WriteLine($"OnCreate {sessionId}");
 
-        public void OnLogout(SessionID sessionId) { }
+        public void OnLogout(SessionID sessionId) => Console.WriteLine($"Logout {sessionId}");
 
-        public void OnLogon(SessionID sessionId) { }
+        public void OnLogon(SessionID sessionId) => Console.WriteLine($"Logon {sessionId}");
         #endregion
     }
 }
