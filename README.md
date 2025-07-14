@@ -64,6 +64,7 @@ dotnet run
 ```
 
 A API estará disponível em: `https://localhost:5001/swagger`
+**Observação importante:** O Accumulator (acceptor) **sempre** precisa rodar antes do Generator (initiator). Isso é uma obrigatoriedade do protocolo FIX, onde o acceptor inicia "escutando" conexões e o initiador já sobe buscando pela porta/IP do acceptor. Caso a ordem não seja obedecida, o initiator vai falhar por não encontrar essa configuração ativa.
 
 ---
 
@@ -96,7 +97,7 @@ A API estará disponível em: `https://localhost:5001/swagger`
 
 - O limite de exposição por símbolo (ex: `VALE3`) é **R$ 100.000.000**.
 - A exposição é calculada como: `preço × quantidade × (1 ou -1)` dependendo do lado (compra ou venda).
-- Se a nova exposição ultrapassar o limite, a ordem é **rejeitada** .
+- Se a nova exposição ultrapassar o limite, a ordem é **rejeitada**.
 - A resposta sempre chega via mensagem `ExecutionReport`.
 
 ---
