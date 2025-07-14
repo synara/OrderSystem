@@ -63,8 +63,8 @@ cd backend/OrderGenerator
 dotnet run
 ```
 
-A API estará disponível em: `https://localhost:5001/swagger`
-**Observação importante:** O Accumulator (acceptor) **sempre** precisa rodar antes do Generator (initiator). Isso é uma obrigatoriedade do protocolo FIX, onde o acceptor inicia "escutando" conexões e o initiador já sobe buscando pela porta/IP do acceptor. Caso a ordem não seja obedecida, o initiator vai falhar por não encontrar essa configuração ativa.
+- A API estará disponível em: `https://localhost:5001/swagger`.
+- **Observação importante:** O Accumulator (acceptor) **sempre** precisa rodar antes do Generator (initiator). Isso é uma obrigatoriedade do protocolo FIX, onde o acceptor inicia "escutando" conexões e o initiador já sobe buscando pela porta/IP do acceptor. Caso a ordem não seja obedecida, o initiator vai falhar por não encontrar essa configuração ativa.
 
 ---
 
