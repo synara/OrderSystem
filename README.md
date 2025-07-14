@@ -95,7 +95,7 @@ A API estará disponível em: `https://localhost:5001/swagger`
 ## 🔒 Regras de Negócio
 
 - O limite de exposição por símbolo (ex: `VALE3`) é **R$ 100.000.000**.
-- A exposição é calculada como: `preço × quantidade × (1 ou -1)` dependendo do lado .
+- A exposição é calculada como: `preço × quantidade × (1 ou -1)` dependendo do lado (compra ou venda).
 - Se a nova exposição ultrapassar o limite, a ordem é **rejeitada** .
 - A resposta sempre chega via mensagem `ExecutionReport`.
 
