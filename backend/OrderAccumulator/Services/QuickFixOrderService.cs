@@ -9,7 +9,7 @@ namespace OrderAccumulator.Services
     public class QuickFixOrderService : MessageCracker, IApplication
     {
         private readonly ConcurrentDictionary<string, decimal> exposureBySymbol = new();
-        private const decimal EXPOSURE_LIMIT = 100_000_000m;
+        private const decimal EXPOSURE_LIMIT = 100000000m;
 
         public void OnMessage(NewOrderSingle order, SessionID sessionID)
         {
@@ -20,9 +20,7 @@ namespace OrderAccumulator.Services
             var quantity = order.OrderQty.getValue();
             var price = order.Price.getValue();
 
-            decimal impact = price * quantity * (side == Side.BUY ? 1 : -1);
-            decimal currentExposure = exposureBySymbol.GetOrAdd(symbol, 0);
-            decimal newExposure = currentExposure + impact;
+            decimal newExposure = NewExposureCalculation(symbol, side, quantity, price);
 
             var rejected = Math.Abs(newExposure) > EXPOSURE_LIMIT;
 
@@ -42,7 +40,7 @@ namespace OrderAccumulator.Services
                 new AvgPx(price));
 
             execReport.Set(new ClOrdID(orderId));
-             
+
             try
             {
                 Session.SendToTarget(execReport, sessionID);
@@ -59,6 +57,15 @@ namespace OrderAccumulator.Services
             {
                 Console.WriteLine($"Erro ao enviar ExecutionReport: {ex}");
             }
+        }
+
+        public decimal NewExposureCalculation(string symbol, char side, decimal quantity, decimal price)
+        {
+            decimal impact = price * quantity * (side == Side.BUY ? 1 : -1);
+
+            decimal currentExposure = exposureBySymbol.GetOrAdd(symbol, 0);
+
+            return currentExposure + impact;
         }
 
         #region IApplication methods

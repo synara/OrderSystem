@@ -12,16 +12,14 @@ namespace OrderGenerator.Clients
 {
     public class QuickFixClient : MessageCracker, IQuickFixClient, IApplication
     {
-        private SessionID sessionID;
+        private SessionID? sessionID;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<OrderResultDto>> pendingOrders = new();
         public void OnMessage(ExecutionReport report, SessionID sessionID)
         {
             var orderId = report.ClOrdID.getValue();
             var execType = report.ExecType.getValue();
 
-            Console.WriteLine($"[OnMessage] Instance HashCode: {this.GetHashCode()}");
-
-            var orderResult = new OrderResultDto().Create(execType != ExecType.REJECTED, orderId);
+            var orderResult = OrderResultDto.Create(execType != ExecType.REJECTED, orderId);
 
             if (pendingOrders.TryRemove(orderId, out var tcs)) tcs.SetResult(orderResult);
             else Console.WriteLine($"Sem pendências para a order {orderId}.");
@@ -31,7 +29,7 @@ namespace OrderGenerator.Clients
         {
             var orderId = Guid.NewGuid().ToString();
             var tcs = new TaskCompletionSource<OrderResultDto>();
-            pendingOrders[orderId] = tcs; //taskscomplets
+            pendingOrders[orderId] = tcs;
 
             var order = new NewOrderSingle(
                 new ClOrdID(orderId),
@@ -44,7 +42,7 @@ namespace OrderGenerator.Clients
             order.Set(new OrderQty(newOrder.Quantity));
             order.Set(new Price(newOrder.Price));
 
-            bool sent = Session.SendToTarget(order, sessionID);
+            bool sent = Session.SendToTarget(order, sessionID!);
 
             if (!sent)
             {
@@ -52,36 +50,18 @@ namespace OrderGenerator.Clients
                 throw new Exception("Erro ao enviar ordem FIX. Revise os valores e a sessão.");
             }
 
-            Console.WriteLine($"[NewOrder] Instance HashCode: {this.GetHashCode()}");
-
             var delay = Task.Delay(10000);
             var completed = await Task.WhenAny(tcs.Task, delay);
 
-            Console.WriteLine($"TCS Task Id: {tcs.Task.Id}");
-            Console.WriteLine($"Completed Task Id: {completed.Id}");
-            Console.WriteLine("Completed == tcs.Task? " + (completed == tcs.Task));
-            Console.WriteLine("Completed.Equals(tcs.Task)? " + completed.Equals(tcs.Task));
-
-            if (!Session.SendToTarget(order, sessionID))
+            if (completed == tcs.Task)
+                return await tcs.Task;
+            else
             {
                 pendingOrders.TryRemove(orderId, out _);
-                throw new Exception("Erro ao enviar ordem FIX. Revise os valores e a sessão.");
-            }
-
-            using var cts = new CancellationTokenSource(10000);
-            using (cts.Token.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false))
-            {
-                try
-                {
-                    return await tcs.Task;
-                }
-                catch (TaskCanceledException)
-                {
-                    pendingOrders.TryRemove(orderId, out _);
-                    throw new TimeoutException("Sem resposta do servidor.");
-                }
+                throw new TimeoutException("Sem resposta do servidor.");
             }
         }
+    
 
         #region IApplication methods
 
