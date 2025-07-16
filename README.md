@@ -37,7 +37,7 @@ git clone https://github.com/synara/OrderSystem.git
 cd OrderSystem
 ```
 
-### 2. Restaurar e compilar
+### 2. Restaurar e compilar backend
 
 ```bash
 cd backend/OrderGenerator
@@ -63,8 +63,17 @@ cd backend/OrderGenerator
 dotnet run
 ```
 
-- A API estará disponível em: `https://localhost:5001/swagger`.
+- A API estará disponível em: `https://localhost:5164/swagger`.
 - **Observação importante:** O Accumulator (acceptor) **sempre** precisa rodar antes do Generator (initiator). Isso é uma obrigatoriedade do protocolo FIX, onde o acceptor inicia "escutando" conexões e o initiator já sobe buscando pela porta/IP do acceptor. Caso a ordem não seja obedecida, o initiator vai falhar por não encontrar essa configuração ativa.
+
+### 4. Rodar front
+```bash
+cd frontend
+npm install
+npm start
+```
+- A interface estará disponível em `http://localhost:3000`.
+- Requer que o backend (OrderGenerator) esteja rodando em `https://localhost:5164`.
 
 ---
 
@@ -124,51 +133,8 @@ OrderSystem/
 │   ├── OrderAccumulator/       # Recebe e valida ordens
 │   └── FIX/                    # Arquivos .cfg de sessão FIX
 ├── frontend/                   # React UI 
-└── README.md                   # Este arquivo
+└── README.md                   
 ```
-
----
-
-## 📄 Exemplo de Configuração FIX
-
-### `generator.cfg` (Initiator)
-
-```ini
-[DEFAULT]
-ConnectionType=initiator
-FileLogPath=logs
-FileStorePath=store
-BeginString=FIX.4.4
-SenderCompID=GENERATOR
-TargetCompID=ACCUMULATOR
-
-[SESSION]
-StartTime=00:00:00
-EndTime=23:59:59
-HeartBtInt=30
-SocketConnectHost=127.0.0.1
-SocketConnectPort=5001
-```
-
-### `accumulator.cfg` (Acceptor)
-
-```ini
-[DEFAULT]
-ConnectionType=acceptor
-FileLogPath=logs
-FileStorePath=store
-BeginString=FIX.4.4
-SenderCompID=ACCUMULATOR
-TargetCompID=GENERATOR
-
-[SESSION]
-StartTime=00:00:00
-EndTime=23:59:59
-HeartBtInt=30
-SocketAcceptPort=5001
-```
-
----
 
 ## 📌 Observações
 
@@ -185,4 +151,6 @@ SocketAcceptPort=5001
 - C#
 - ConcurrentDictionary
 - xUnit
-- React.js
+- React.js + TypeScript
+- Antd Design
+- Axios   
