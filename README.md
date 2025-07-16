@@ -1,5 +1,5 @@
 
-# 📈 Order System - FIX 4.4 com .NET 6
+# 📈 Order System - FIX 4.4 com .NET 6 e React
 
 Usando a biblioteca [QuickFIX/n](https://quickfixn.org/), este projeto simula um sistema de envio e recebimento de ordens financeiras utilizando o protocolo **FIX 4.4**, com dois serviços principais desenvolvidos em **.NET 6**.
 
@@ -149,7 +149,6 @@ OrderSystem/
 - ASP.NET Core 6
 - QuickFIX/n (1.13+)
 - C#
-- ConcurrentDictionary
 - xUnit
 - React.js + TypeScript
 - Antd Design
