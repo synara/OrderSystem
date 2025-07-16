@@ -27,6 +27,8 @@ namespace OrderGenerator.Clients
 
         public async Task<OrderResultDto> NewOrder(OrderDto newOrder)
         {
+            Validations(newOrder);
+
             var orderId = Guid.NewGuid().ToString();
             var tcs = new TaskCompletionSource<OrderResultDto>();
             pendingOrders[orderId] = tcs;
@@ -61,7 +63,18 @@ namespace OrderGenerator.Clients
                 throw new TimeoutException("Sem resposta do servidor.");
             }
         }
-    
+
+        private void Validations(OrderDto newOrder)
+        {
+            if (newOrder.Quantity <= 0 || newOrder.Quantity >= 100000)
+                throw new Exception("Quantidade precisa ser menor que 100.000.");
+            if (newOrder.Price <= 0 || newOrder.Price >= 1000)
+                throw new Exception("Preço precisa ser menor que R$1.000.");
+
+            if (!(newOrder.Price % 0.01m).Equals(0))
+                throw new Exception("Preço precisa ser múltiplo de 0.01.");
+        }
+
 
         #region IApplication methods
 
