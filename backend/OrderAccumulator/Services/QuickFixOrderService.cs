@@ -26,13 +26,11 @@ namespace OrderAccumulator.Services
 
             var execType = new ExecType(rejected ? ExecType.REJECTED : ExecType.NEW);
 
-            var ordStatus = execType.getValue().Equals(ExecType.REJECTED) ? OrdStatus.REJECTED : OrdStatus.NEW;
-
             var execReport = new ExecutionReport(
                 new OrderID(orderId),
                 new ExecID(Guid.NewGuid().ToString()),
                 execType,
-                new OrdStatus(ordStatus),
+                new OrdStatus(execType.getValue().Equals(ExecType.REJECTED) ? OrdStatus.REJECTED : OrdStatus.NEW),
                 new Symbol(symbol),
                 new Side(side),
                 new LeavesQty(quantity),
@@ -51,7 +49,6 @@ namespace OrderAccumulator.Services
                     Console.WriteLine($"Ordem {orderId} aceita para símbolo {symbol}. ");
                     exposureBySymbol[symbol] = newExposure;
                 }
-
             }
             catch (Exception ex)
             {

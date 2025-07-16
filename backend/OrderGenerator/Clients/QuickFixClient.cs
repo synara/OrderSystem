@@ -52,8 +52,7 @@ namespace OrderGenerator.Clients
                 throw new Exception("Erro ao enviar ordem FIX. Revise os valores e a sessão.");
             }
 
-            var delay = Task.Delay(10000);
-            var completed = await Task.WhenAny(tcs.Task, delay);
+            var completed = await Task.WhenAny(tcs.Task, Task.Delay(10000));
 
             if (completed == tcs.Task)
                 return await tcs.Task;
@@ -68,8 +67,8 @@ namespace OrderGenerator.Clients
         {
             if (newOrder.Quantity <= 0 || newOrder.Quantity >= 100000)
                 throw new Exception("Quantidade precisa ser menor que 100.000.");
-            if (newOrder.Price <= 0 || newOrder.Price >= 1000)
-                throw new Exception("Preço precisa ser menor que R$1.000.");
+            if (newOrder.Price <= 0 || newOrder.Price < 1000)
+                throw new Exception("Preço precisa ser menor que R$1.000 e maior que R$0.");
 
             if (!(newOrder.Price % 0.01m).Equals(0))
                 throw new Exception("Preço precisa ser múltiplo de 0.01.");

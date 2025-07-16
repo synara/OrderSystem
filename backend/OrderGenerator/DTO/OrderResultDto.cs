@@ -11,7 +11,7 @@
             return new OrderResultDto()
             {
                 OrderId = orderId,
-                Message = accepted ? "Ordem recebida e aceita." : "Ordem rejeitada.",
+                Message = accepted ? "Ordem recebida e aceita." : "Ordem rejeitada por limite de exposição (R$100.000.000).",
                 Success = accepted
             };
         }

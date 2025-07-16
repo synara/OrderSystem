@@ -43,8 +43,7 @@ export default function OrderGenerator() {
       }
     }
   }, []);
-
-  // Função padronizada para atualizar orders e localStorage
+  
   const updateOrders = (newOrders: OrderTableRow[] | ((prev: OrderTableRow[]) => OrderTableRow[])) => {
     setOrders((prev) => {
       const updatedOrders = typeof newOrders === 'function' ? newOrders(prev) : newOrders;
@@ -58,42 +57,35 @@ export default function OrderGenerator() {
       message.error('Preencha todos os campos');
       return;
     }
-
     const input: OrderInput = { symbol, side, price, quantity };
 
-    // Adiciona ordem "Enviando..." no topo da lista
     updateOrders((prev) => [{ ...input, message: 'Enviando...' }, ...prev]);
 
     setLoading(true);
     try {
       const result = await sendOrder(input);
-
-      // Atualiza a ordem que está no topo (a última adicionada) com o resultado do servidor
       updateOrders((prev) => {
         const updated = [...prev];
         updated[0] = { ...input, ...result };
         return updated;
       });
 
-      message.success('Ordem enviada com sucesso!');
     } catch (error: any) {
-      const serverMessage =
+      const serverError =
         error?.response?.data?.message ||
         error?.message ||
         'Erro ao enviar ordem';
 
-      // Atualiza a ordem que está no topo com erro
       updateOrders((prev) => {
         const updated = [...prev];
         updated[0] = {
           ...input,
-          message: serverMessage,
+          message: serverError,
           success: false,
         };
         return updated;
       });
 
-      message.error('Erro ao enviar ordem');
     } finally {
       setLoading(false);
       setSymbol('');
@@ -146,7 +138,7 @@ export default function OrderGenerator() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{ background: '#d6bcfa', padding: '0 24px' }}>
+      <Header style={{ background: '#a7a6a6', padding: '0 24px' }}>
         <Title level={3} style={{ color: '#000', lineHeight: '64px', margin: 0 }}>
           Gerador de Ordens
         </Title>
@@ -196,8 +188,6 @@ export default function OrderGenerator() {
           <Col span={5}>
             <label style={{ display: 'block', marginBottom: 4 }}>Quantidade</label>
             <InputNumber
-              min={1}
-              max={99999}
               placeholder="Ex: 100"
               style={{ width: '100%' }}
               value={quantity}

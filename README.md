@@ -152,4 +152,16 @@ OrderSystem/
 - xUnit
 - React.js + TypeScript
 - Antd Design
-- Axios   
+- Axios 
+
+# 🌱 Oportunidades de melhorias
+- Persistência dos dados: nessa versão, os valores por símbolo estão armazenados somente em tempo de execução, em um dicionário. Para exibição no front, em localstorage da página.
+- Informação de valores fixos no código.
+
+# 👩‍💻 Desafios encontrados
+- Aplicação em ASP.NET Core 6, pois na versão 8 ocorreu alguma incompatilidade com a classe ExecutionReport e não foi possível rastrear o problema;
+- Configuração da aplicação;
+- Entendimento do uso de mensageria sem um intermediário (como no RabbitMQ, por exemplo);
+- Entendimento do negócio.
+
+
