@@ -33,6 +33,8 @@ export default function OrderGenerator() {
   const [price, setPrice] = useState<number | undefined>(undefined);
   const [quantity, setQuantity] = useState<number | undefined>(undefined);
 
+  const simbolos = ['VALE3', 'VIIA4', 'PETR4'];
+
   useEffect(() => {
     const storedOrders = localStorage.getItem('orders');
     if (storedOrders) {
@@ -43,7 +45,7 @@ export default function OrderGenerator() {
       }
     }
   }, []);
-  
+
   const updateOrders = (newOrders: OrderTableRow[] | ((prev: OrderTableRow[]) => OrderTableRow[])) => {
     setOrders((prev) => {
       const updatedOrders = typeof newOrders === 'function' ? newOrders(prev) : newOrders;
@@ -98,7 +100,7 @@ export default function OrderGenerator() {
   const columns = [
     { title: 'Símbolo', dataIndex: 'symbol', key: 'symbol' },
     { title: 'Lado', dataIndex: 'side', key: 'side' },
-    { title: 'Preço', dataIndex: 'price', key: 'price',  render: (price: number) => `R$${price.toFixed(2)}` },
+    { title: 'Preço', dataIndex: 'price', key: 'price', render: (price: number) => `R$${price.toFixed(2)}` },
     { title: 'Quantidade', dataIndex: 'quantity', key: 'quantity' },
     {
       title: 'ID da ordem',
@@ -107,7 +109,7 @@ export default function OrderGenerator() {
       render: (orderId: string | undefined) => orderId ?? 'S/N',
     },
     {
-      title: 'Mensagem',
+      title: 'Resultado do processamento',
       dataIndex: 'message',
       key: 'message',
       render: (_: string, record: OrderTableRow) => {
@@ -133,8 +135,6 @@ export default function OrderGenerator() {
       },
     },
   ];
-
-  const simbolos = ['VALE3', 'VIIA4', 'PETR4'];
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -180,9 +180,15 @@ export default function OrderGenerator() {
             <InputNumber
               placeholder="Ex.: R$13.55"
               style={{ width: '100%' }}
+
               value={price}
               step={0.1}
               onChange={(v) => setPrice(v === null ? undefined : v)}
+              formatter={(value, _info) => (value !== undefined ? value.toString().replace('.', ',') : '')}
+              parser={(value) => {
+                const parsed = parseFloat(value?.replace(',', '.') || '')
+                return isNaN(parsed) ? 0 : parsed
+              }}
             />
           </Col>
 
