@@ -74,17 +74,7 @@ namespace OrderAccumulator.Services
 
         public void FromApp(QuickFix.Message message, SessionID sessionId)
         {
-            Console.WriteLine($"Message received:\n{message}");
-
-            try
-            {
-                if(message.Header.GetString(Tags.MsgType) == MsgType.ORDER_SINGLE)
-                    Crack(message, sessionId);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in the message Crack:\n{ex}");
-            }
+            Crack(message, sessionId);
         }
 
         public void OnCreate(SessionID sessionId) => Console.WriteLine($"OnCreate {sessionId}");

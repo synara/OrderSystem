@@ -38,7 +38,7 @@ namespace OrderGenerator.Clients
                 new Symbol(newOrder.Symbol),
                 new Side(newOrder.Side.ToUpper() == "COMPRA" ? Side.BUY : Side.SELL),
                 new TransactTime(DateTime.UtcNow),
-                new OrdType(OrdType.LIMIT)
+                new OrdType(OrdType.LIMIT) 
             );
 
             order.Set(new OrderQty(newOrder.Quantity));
@@ -78,16 +78,7 @@ namespace OrderGenerator.Clients
 
         public void FromApp(QuickFix.Message message, SessionID sessionID)
         {
-            Console.WriteLine($"Message received in FromApp:\n{message}");
-            Console.WriteLine("Tipo da mensagem: " + message.GetType().Name);
-            Console.WriteLine("MsgType: " + message.Header.GetString(Tags.MsgType));
-
-            if (message.Header.GetString(Tags.MsgType) == MsgType.EXECUTION_REPORT)
-            {
-                var execReport = new ExecutionReport();
-                execReport.FromString(message.ToString(), true, null, null);
-                OnMessage(execReport, sessionID);
-            }
+            Crack(message, sessionID);
         }
 
         public void FromAdmin(QuickFix.Message message, SessionID sessionID) { }
