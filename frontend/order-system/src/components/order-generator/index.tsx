@@ -181,6 +181,7 @@ export default function OrderGenerator() {
               placeholder="Ex.: R$13.55"
               style={{ width: '100%' }}
               value={price}
+              step={0.1}
               onChange={(v) => setPrice(v === null ? undefined : v)}
             />
           </Col>

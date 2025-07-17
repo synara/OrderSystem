@@ -67,9 +67,8 @@ namespace OrderGenerator.Clients
         {
             if (newOrder.Quantity <= 0 || newOrder.Quantity >= 100000)
                 throw new Exception("Quantidade precisa ser menor que 100.000.");
-            if (newOrder.Price <= 0 || newOrder.Price < 1000)
+            if (newOrder.Price <= 0 || newOrder.Price >= 1000)
                 throw new Exception("Preço precisa ser menor que R$1.000 e maior que R$0.");
-
             if (!(newOrder.Price % 0.01m).Equals(0))
                 throw new Exception("Preço precisa ser múltiplo de 0.01.");
         }
